@@ -1,0 +1,6 @@
+/.venv
+/install
+/build
+/log
+
+/.idea
