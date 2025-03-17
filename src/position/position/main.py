@@ -6,12 +6,12 @@ from serial import Serial
 
 class PositionNode(Node):
 	def __init__(self):
-		# 初始化ROS2 Node
+		# Initialize the ROS2 node
 		super().__init__('position_node')
 
-		# 初始化下位机通讯UART
+		# Initialize the serial port
 		self.serial = Serial(
-			port='/dev/ttyAMA0',
+			port='/dev/ttyAMA2',
 			baudrate=115200,
 			bytesize=8,
 			parity='N',
@@ -19,7 +19,7 @@ class PositionNode(Node):
 			timeout=1
 		)
 
-		# 激光雷达订阅
+		# Subscribe to the Lidar topics
 		self.laser_subscriber = self.create_subscription(
 			LaserScan,
 			'/scan',
@@ -27,7 +27,7 @@ class PositionNode(Node):
 			10
 		)
 
-		# IMU订阅
+		# Subscribe to the IMU topic
 		self.imu_subscriber = self.create_subscription(
 			Imu,
 			'/imu/mpu6050',
@@ -39,10 +39,9 @@ class PositionNode(Node):
 		self.pitch = 0.0
 		self.yaw = 0.0
 
-	# 发布器
-
-	# 创建定时器用于发送数据
-	# self.timer = self.create_timer()
+		# Publisher
+		# Create a publisher
+		self.timer = self.create_timer(1.0, self.send_data)  # 每秒发送一次数据
 
 	def ladar_callback(self, msg):
 		self.get_logger().info('Receiver Lidar Message')
@@ -53,6 +52,10 @@ class PositionNode(Node):
 		self.get_logger().info('Receiver Imu Message')
 		pass
 
+	def send_data(self):
+		# Send data to the serial port
+		self.serial.write(str("Test").encode('utf-8'))
+		self.get_logger().info('Send a message to the serial port')
 
 def main():
 	rclpy.init()
