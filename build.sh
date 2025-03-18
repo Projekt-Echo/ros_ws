@@ -8,4 +8,5 @@ echo "Building"
 colcon build
 sleep 3
 
+echo "Sourcing the install file"
 source install/setup.zsh
