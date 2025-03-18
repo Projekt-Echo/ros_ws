@@ -77,25 +77,20 @@ class PositionNode(Node):
 
 
 	def send_data(self):
-		# Convert distances to cm and limit them to 65535
 		x_coord = min(int(self.distance_180 * 100), 65535)  # 180° distance as X coordinate
 		y_coord = min(int(self.distance_270 * 100), 65535)  # 270° distance as Y coordinate
 
 		# Send position data to stm32
 		data = [
-			0x55, 0x00,  # Feature header (2 bytes)
-			0x00, 0x00,  # Status code (2 bytes)
-			x_coord & 0xFF, (x_coord >> 8) & 0xFF,  # X coordinate (2 bytes) - 180 degrees
-			y_coord & 0xFF, (y_coord >> 8) & 0xFF,  # Y coordinate (2 bytes) - 270 degrees
-			0x00, 0x00,  # Target X coordinate (2 bytes)
-			0x00, 0x00,  # Target Y coordinate (2 bytes)
-			0x00, 0x00,  # Reserved (2 bytes)
-			0x00, 0x00   # Reserved (2 bytes)
+			(x_coord >> 8) & 0xFF,  # High 8 bits of X coordinate
+			y_coord & 0xFF,  # 8 bits of Y coordinate
 		]
 
-		bytes_data = bytearray(data)
+		# Convert data to a string
+		data_str = ''.join(chr(byte) for byte in data)
 
-		self.serial.write(bytes_data)
+		# Send the string data through the serial port
+		self.serial.write(data_str.encode('utf-8'))
 
 
 

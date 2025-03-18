@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(ldlidar)
+project(lidar)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -36,14 +36,14 @@ endif()
 ## include header file path
 include_directories(
 ${CMAKE_CURRENT_SOURCE_DIR}/include
-${CMAKE_CURRENT_SOURCE_DIR}/../../../ldlidar_driver/include
+${CMAKE_CURRENT_SOURCE_DIR}/../../../lidar_driver/include
 ${catkin_INCLUDE_DIRS}
 )
 ## get source file
 file(GLOB  MAIN_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-file(GLOB  LDLIDAR_DRIVER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../../ldlidar_driver/*.cpp)
+file(GLOB  lidar_DRIVER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../../lidar_driver/*.cpp)
 ## generate binary file and link
-add_executable(${PROJECT_NAME} ${MAIN_SRC} ${LDLIDAR_DRIVER_SRC})
+add_executable(${PROJECT_NAME} ${MAIN_SRC} ${lidar_DRIVER_SRC})
 ament_target_dependencies(${PROJECT_NAME} rclcpp sensor_msgs)
 target_link_libraries(${PROJECT_NAME} pthread)
 install(PROGRAMS scripts/LD14P_scan_fre.py DESTINATION lib/${PROJECT_NAME})

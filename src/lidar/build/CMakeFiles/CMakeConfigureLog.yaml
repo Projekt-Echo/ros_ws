@@ -122,8 +122,8 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "C:/Users/Nymphaea/Desktop/ROS/\u4e50\u52a8LD-14P\u96f7\u8fbe\u8d44\u6599\u5305V3.0_20241021/1.ROS_SDK/\u4e32\u53e3\u7248/ROS2/ldlidar/build/CMakeFiles/CMakeScratch/TryCompile-gedprf"
-      binary: "C:/Users/Nymphaea/Desktop/ROS/\u4e50\u52a8LD-14P\u96f7\u8fbe\u8d44\u6599\u5305V3.0_20241021/1.ROS_SDK/\u4e32\u53e3\u7248/ROS2/ldlidar/build/CMakeFiles/CMakeScratch/TryCompile-gedprf"
+      source: "C:/Users/Nymphaea/Desktop/ROS/\u4e50\u52a8LD-14P\u96f7\u8fbe\u8d44\u6599\u5305V3.0_20241021/1.ROS_SDK/\u4e32\u53e3\u7248/ROS2/lidar/build/CMakeFiles/CMakeScratch/TryCompile-gedprf"
+      binary: "C:/Users/Nymphaea/Desktop/ROS/\u4e50\u52a8LD-14P\u96f7\u8fbe\u8d44\u6599\u5305V3.0_20241021/1.ROS_SDK/\u4e32\u53e3\u7248/ROS2/lidar/build/CMakeFiles/CMakeScratch/TryCompile-gedprf"
     cmakeVariables:
       CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3"
       CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
@@ -201,8 +201,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "C:/Users/Nymphaea/Desktop/ROS/\u4e50\u52a8LD-14P\u96f7\u8fbe\u8d44\u6599\u5305V3.0_20241021/1.ROS_SDK/\u4e32\u53e3\u7248/ROS2/ldlidar/build/CMakeFiles/CMakeScratch/TryCompile-t1aj4o"
-      binary: "C:/Users/Nymphaea/Desktop/ROS/\u4e50\u52a8LD-14P\u96f7\u8fbe\u8d44\u6599\u5305V3.0_20241021/1.ROS_SDK/\u4e32\u53e3\u7248/ROS2/ldlidar/build/CMakeFiles/CMakeScratch/TryCompile-t1aj4o"
+      source: "C:/Users/Nymphaea/Desktop/ROS/\u4e50\u52a8LD-14P\u96f7\u8fbe\u8d44\u6599\u5305V3.0_20241021/1.ROS_SDK/\u4e32\u53e3\u7248/ROS2/lidar/build/CMakeFiles/CMakeScratch/TryCompile-t1aj4o"
+      binary: "C:/Users/Nymphaea/Desktop/ROS/\u4e50\u52a8LD-14P\u96f7\u8fbe\u8d44\u6599\u5305V3.0_20241021/1.ROS_SDK/\u4e32\u53e3\u7248/ROS2/lidar/build/CMakeFiles/CMakeScratch/TryCompile-t1aj4o"
     cmakeVariables:
       CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /W3 /GR /EHsc"
       CMAKE_CXX_SCAN_FOR_MODULES: "OFF"

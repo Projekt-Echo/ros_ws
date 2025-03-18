@@ -26,14 +26,14 @@ Parameter Description:
 def generate_launch_description():
 	# LDROBOT LiDAR publisher node
 	ldlidar_node = Node(
-		package='ldlidar',
-		executable='ldlidar',
+		package='lidar',
+		executable='lidar',
 		name='ldlidar_publisher_ld14p',
 		output='screen',
 		parameters=[
 			{'product_name': 'LDLiDAR_LD14P'},
 			{'topic_name': 'scan'},
-			{'port_name': '/dev/ttyUSB0'},
+			{'port_name': '/dev/ttyACM0'},
 			{'frame_id': 'base_laser'},
 			{'laser_scan_dir': True},
 			{'enable_angle_crop_func': False},  # 单角度裁剪开关：值为False时表示不使用多角度裁剪，默认为False
@@ -52,7 +52,7 @@ def generate_launch_description():
 	)
 
 	scan_fre_node = ExecuteProcess(
-		cmd=['ros2', 'run', 'ldlidar', 'LD14P_scan_fre.py']
+		cmd=['ros2', 'run', 'lidar', 'LD14P_scan_fre.py']
 	)
 
 	# Define LaunchDescription variable
