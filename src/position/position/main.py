@@ -82,27 +82,35 @@ class PositionNode(Node):
 
 
 	def send_data(self):
-		def send_data(self):
-			# Add safety checks before converting to int
-			if math.isnan(self.distance_180) or math.isnan(self.distance_270):
-				self.get_logger().warn('NaN values detected in distance data, using default values')
-				x_coord = 0
-				y_coord = 0
-			else:
-				x_coord = min(int(self.distance_180 * 100), 65535)  # 180° distance as X coordinate
-				y_coord = min(int(self.distance_270 * 100), 65535)  # 270° distance as Y coordinate
+		# Store previous valid coordinates as class variables if they don't exist
+		if not hasattr(self, 'last_valid_x'):
+			self.last_valid_x = 0
+		if not hasattr(self, 'last_valid_y'):
+			self.last_valid_y = 0
 
-			# Send position data to stm32
-			data = [
-				(x_coord >> 8) & 0xFF,  # High 8 bits of X coordinate
-				y_coord & 0xFF,  # 8 bits of Y coordinate
-			]
+		# Add safety checks before converting to int
+		if math.isnan(self.distance_180) or math.isnan(self.distance_270):
+			self.get_logger().warn('NaN values detected in distance data, using previous values')
+			x_coord = self.last_valid_x
+			y_coord = self.last_valid_y
+		else:
+			x_coord = min(int(self.distance_180 * 100), 65535)  # 180° distance as X coordinate
+			y_coord = min(int(self.distance_270 * 100), 65535)  # 270° distance as Y coordinate
+			# Save these as the last valid coordinates
+			self.last_valid_x = x_coord
+			self.last_valid_y = y_coord
 
-			# Convert data to a string
-			data_str = ''.join(chr(byte) for byte in data)
+		# Send position data to stm32
+		data = [
+			(x_coord >> 8) & 0xFF,  # High 8 bits of X coordinate
+			y_coord & 0xFF,  # 8 bits of Y coordinate
+		]
 
-			# Send the string data through the serial port
-			self.serial.write(data_str.encode('utf-8'))
+		# Convert data to a string
+		data_str = ''.join(chr(byte) for byte in data)
+
+		# Send the string data through the serial port
+		self.serial.write(data_str.encode('utf-8'))
 
 
 
