@@ -1,3 +1,5 @@
+import math
+
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan, Imu
@@ -56,17 +58,20 @@ class PositionNode(Node):
 		num_points = len(msg.ranges)
 
 		# Calculate indices for the specific angles
-		# LaserScan ranges typically start at angle_min and increment by angle_increment
 		idx_0 = int((0 - msg.angle_min) / msg.angle_increment) % num_points
 		idx_90 = int((1.57 - msg.angle_min) / msg.angle_increment) % num_points  # 90° in radians
 		idx_180 = int((3.14 - msg.angle_min) / msg.angle_increment) % num_points  # 180° in radians
 		idx_270 = int((4.71 - msg.angle_min) / msg.angle_increment) % num_points  # 270° in radians
 
-		# Get distances (with safety checks)
-		self.distance_0 = msg.ranges[idx_0] if not float('inf') in [msg.ranges[idx_0]] else 0
-		self.distance_90 = msg.ranges[idx_90] if not float('inf') in [msg.ranges[idx_90]] else 0
-		self.distance_180 = msg.ranges[idx_180] if not float('inf') in [msg.ranges[idx_180]] else 0
-		self.distance_270 = msg.ranges[idx_270] if not float('inf') in [msg.ranges[idx_270]] else 0
+		# Get distances (with improved safety checks for both inf and NaN)
+		self.distance_0 = msg.ranges[idx_0] if not (
+				math.isnan(msg.ranges[idx_0]) or msg.ranges[idx_0] == float('inf')) else 0
+		self.distance_90 = msg.ranges[idx_90] if not (
+				math.isnan(msg.ranges[idx_90]) or msg.ranges[idx_90] == float('inf')) else 0
+		self.distance_180 = msg.ranges[idx_180] if not (
+				math.isnan(msg.ranges[idx_180]) or msg.ranges[idx_180] == float('inf')) else 0
+		self.distance_270 = msg.ranges[idx_270] if not (
+				math.isnan(msg.ranges[idx_270]) or msg.ranges[idx_270] == float('inf')) else 0
 
 		self.get_logger().info(
 			f'Distances - 0°: {self.distance_0:.2f}, 90°: {self.distance_90:.2f}, 180°: {self.distance_180:.2f}, 270°: {self.distance_270:.2f}')
@@ -77,20 +82,27 @@ class PositionNode(Node):
 
 
 	def send_data(self):
-		x_coord = min(int(self.distance_180 * 100), 65535)  # 180° distance as X coordinate
-		y_coord = min(int(self.distance_270 * 100), 65535)  # 270° distance as Y coordinate
+		def send_data(self):
+			# Add safety checks before converting to int
+			if math.isnan(self.distance_180) or math.isnan(self.distance_270):
+				self.get_logger().warn('NaN values detected in distance data, using default values')
+				x_coord = 0
+				y_coord = 0
+			else:
+				x_coord = min(int(self.distance_180 * 100), 65535)  # 180° distance as X coordinate
+				y_coord = min(int(self.distance_270 * 100), 65535)  # 270° distance as Y coordinate
 
-		# Send position data to stm32
-		data = [
-			(x_coord >> 8) & 0xFF,  # High 8 bits of X coordinate
-			y_coord & 0xFF,  # 8 bits of Y coordinate
-		]
+			# Send position data to stm32
+			data = [
+				(x_coord >> 8) & 0xFF,  # High 8 bits of X coordinate
+				y_coord & 0xFF,  # 8 bits of Y coordinate
+			]
 
-		# Convert data to a string
-		data_str = ''.join(chr(byte) for byte in data)
+			# Convert data to a string
+			data_str = ''.join(chr(byte) for byte in data)
 
-		# Send the string data through the serial port
-		self.serial.write(data_str.encode('utf-8'))
+			# Send the string data through the serial port
+			self.serial.write(data_str.encode('utf-8'))
 
 
 
