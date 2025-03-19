@@ -1,3 +1,5 @@
+import math
+
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan, Imu
@@ -56,17 +58,20 @@ class PositionNode(Node):
 		num_points = len(msg.ranges)
 
 		# Calculate indices for the specific angles
-		# LaserScan ranges typically start at angle_min and increment by angle_increment
 		idx_0 = int((0 - msg.angle_min) / msg.angle_increment) % num_points
 		idx_90 = int((1.57 - msg.angle_min) / msg.angle_increment) % num_points  # 90° in radians
 		idx_180 = int((3.14 - msg.angle_min) / msg.angle_increment) % num_points  # 180° in radians
 		idx_270 = int((4.71 - msg.angle_min) / msg.angle_increment) % num_points  # 270° in radians
 
-		# Get distances (with safety checks)
-		self.distance_0 = msg.ranges[idx_0] if not float('inf') in [msg.ranges[idx_0]] else 0
-		self.distance_90 = msg.ranges[idx_90] if not float('inf') in [msg.ranges[idx_90]] else 0
-		self.distance_180 = msg.ranges[idx_180] if not float('inf') in [msg.ranges[idx_180]] else 0
-		self.distance_270 = msg.ranges[idx_270] if not float('inf') in [msg.ranges[idx_270]] else 0
+		# Get distances (with improved safety checks for both inf and NaN)
+		self.distance_0 = msg.ranges[idx_0] if not (
+				math.isnan(msg.ranges[idx_0]) or msg.ranges[idx_0] == float('inf')) else 0
+		self.distance_90 = msg.ranges[idx_90] if not (
+				math.isnan(msg.ranges[idx_90]) or msg.ranges[idx_90] == float('inf')) else 0
+		self.distance_180 = msg.ranges[idx_180] if not (
+				math.isnan(msg.ranges[idx_180]) or msg.ranges[idx_180] == float('inf')) else 0
+		self.distance_270 = msg.ranges[idx_270] if not (
+				math.isnan(msg.ranges[idx_270]) or msg.ranges[idx_270] == float('inf')) else 0
 
 		self.get_logger().info(
 			f'Distances - 0°: {self.distance_0:.2f}, 90°: {self.distance_90:.2f}, 180°: {self.distance_180:.2f}, 270°: {self.distance_270:.2f}')
@@ -77,8 +82,23 @@ class PositionNode(Node):
 
 
 	def send_data(self):
-		x_coord = min(int(self.distance_180 * 100), 65535)  # 180° distance as X coordinate
-		y_coord = min(int(self.distance_270 * 100), 65535)  # 270° distance as Y coordinate
+		# Store previous valid coordinates as class variables if they don't exist
+		if not hasattr(self, 'last_valid_x'):
+			self.last_valid_x = 0
+		if not hasattr(self, 'last_valid_y'):
+			self.last_valid_y = 0
+
+		# Add safety checks before converting to int
+		if math.isnan(self.distance_180) or math.isnan(self.distance_270):
+			self.get_logger().warn('NaN values detected in distance data, using previous values')
+			x_coord = self.last_valid_x
+			y_coord = self.last_valid_y
+		else:
+			x_coord = min(int(self.distance_180 * 100), 65535)  # 180° distance as X coordinate
+			y_coord = min(int(self.distance_270 * 100), 65535)  # 270° distance as Y coordinate
+			# Save these as the last valid coordinates
+			self.last_valid_x = x_coord
+			self.last_valid_y = y_coord
 
 		# Send position data to stm32
 		data = [
