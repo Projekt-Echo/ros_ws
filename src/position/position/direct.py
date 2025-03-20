@@ -6,7 +6,7 @@ from sensor_msgs.msg import LaserScan, Imu
 from serial import Serial
 
 
-class PositionNode(Node):
+class PositionDirectNode(Node):
 	def __init__(self):
 		# Initialize the ROS2 node
 		super().__init__('position_node')
@@ -76,10 +76,8 @@ class PositionNode(Node):
 		self.get_logger().info(
 			f'Distances - 0°: {self.distance_0:.2f}, 90°: {self.distance_90:.2f}, 180°: {self.distance_180:.2f}, 270°: {self.distance_270:.2f}')
 
-
 	def imu_callback(self, msg):
 		self.get_logger().info('Receiver Imu Message')
-
 
 	def send_data(self):
 		# Store previous valid coordinates as class variables if they don't exist
@@ -113,10 +111,9 @@ class PositionNode(Node):
 		self.serial.write(data_str.encode('utf-8'))
 
 
-
 def main():
 	rclpy.init()
-	node = PositionNode()
+	node = PositionDirectNode()
 	rclpy.spin(node)
 	node.destroy_node()
 	rclpy.shutdown()
