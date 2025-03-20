@@ -20,7 +20,8 @@ setup(
 	tests_require=['pytest'],
 	entry_points={
 		'console_scripts': [
-			"main = position.main:main",
+			"direct = position.direct:main",
+			"fitting = position.fitting:main",
 		],
 	},
 )
