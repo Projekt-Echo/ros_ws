@@ -1,12 +1,13 @@
 import math
 
 import rclpy
+from geometry_msgs.msg import Vector3
 from rclpy.node import Node
-from sensor_msgs.msg import LaserScan, Imu
+from sensor_msgs.msg import LaserScan
 from serial import Serial
 
 
-class PositionDirectNode(Node):
+class PositionNode(Node):
 	def __init__(self):
 		# Initialize the ROS2 node
 		super().__init__('position_node')
@@ -30,10 +31,10 @@ class PositionDirectNode(Node):
 		)
 
 		# Subscribe to the IMU topic
-		self.imu_subscriber = self.create_subscription(
-			Imu,
-			'/imu/mpu6050',
-			self.imu_callback,
+		self.imu_angle_subscriber = self.create_subscription(
+			Vector3,
+			'/imu/angles',
+			self.angles_callback,
 			10
 		)
 
@@ -50,6 +51,16 @@ class PositionDirectNode(Node):
 		# Publisher
 		# Create a publisher
 		self.timer = self.create_timer(1.0, self.send_data)  # 每秒发送一次数据
+
+	def angles_callback(self, msg):
+		# Extract angles from the message
+		self.roll = msg.x
+		self.pitch = msg.y
+		self.yaw = msg.z
+
+		# Most important: Yaw Axis
+		angles_data = f'Angles - Roll: {self.roll:.2f}, Pitch: {self.pitch:.2f}, Yaw: {self.yaw:.2f}\n'
+		self.get_logger().info(angles_data)
 
 	def ladar_callback(self, msg):
 		self.get_logger().info('Receiver Lidar Message')
@@ -76,9 +87,6 @@ class PositionDirectNode(Node):
 		self.get_logger().info(
 			f'Distances - 0°: {self.distance_0:.2f}, 90°: {self.distance_90:.2f}, 180°: {self.distance_180:.2f}, 270°: {self.distance_270:.2f}')
 
-	def imu_callback(self, msg):
-		self.get_logger().info('Receiver Imu Message')
-
 	def send_data(self):
 		# Store previous valid coordinates as class variables if they don't exist
 		if not hasattr(self, 'last_valid_x'):
@@ -103,17 +111,12 @@ class PositionDirectNode(Node):
 			(x_coord >> 8) & 0xFF,  # High 8 bits of X coordinate
 			y_coord & 0xFF,  # 8 bits of Y coordinate
 		]
-
-		# Convert data to a string
-		data_str = ''.join(chr(byte) for byte in data)
-
-		# Send the string data through the serial port
-		self.serial.write(data_str.encode('utf-8'))
+# self.serial.write(data)
 
 
 def main():
 	rclpy.init()
-	node = PositionDirectNode()
+	node = PositionNode()
 	rclpy.spin(node)
 	node.destroy_node()
 	rclpy.shutdown()
