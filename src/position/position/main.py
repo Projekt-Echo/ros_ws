@@ -15,11 +15,7 @@ class PositionNode(Node):
 		# Initialize the serial port
 		self.serial = Serial(
 			port='/dev/ttyAMA2',
-			baudrate=115200,
-			bytesize=8,
-			parity='N',
-			stopbits=1,
-			timeout=1
+			baudrate=9600,
 		)
 
 		# Subscribe to the Lidar topics
@@ -61,6 +57,7 @@ class PositionNode(Node):
 		# Most important: Yaw Axis
 		angles_data = f'Angles - Roll: {self.roll:.2f}, Pitch: {self.pitch:.2f}, Yaw: {self.yaw:.2f}\n'
 		self.get_logger().info(angles_data)
+		self.serial.write(angles_data.encode("utf-8"))
 
 	def ladar_callback(self, msg):
 		self.get_logger().info('Receiver Lidar Message')
@@ -111,13 +108,18 @@ class PositionNode(Node):
 			(x_coord >> 8) & 0xFF,  # High 8 bits of X coordinate
 			y_coord & 0xFF,  # 8 bits of Y coordinate
 		]
-# self.serial.write(data)
+		# Convert data to a string
+		data_str = ''.join(chr(byte) for byte in data)
+
+		# Send the string data through the serial port
+		self.serial.write(data_str.encode('utf-8'))
 
 
 def main():
 	rclpy.init()
 	node = PositionNode()
 	rclpy.spin(node)
+	node.serial.close()  # Close the serial port when shutting down
 	node.destroy_node()
 	rclpy.shutdown()
 
