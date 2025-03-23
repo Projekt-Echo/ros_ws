@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
 import struct
+import time
 
 import rclpy
-import smbus
+import smbus2
 from geometry_msgs.msg import Vector3
 from rclpy.node import Node
 from sensor_msgs.msg import Imu
@@ -11,13 +11,15 @@ from sensor_msgs.msg import Imu
 class JY61PDriver(Node):
 	def __init__(self):
 		super().__init__('imu')
-		self.bus = smbus.SMBus(1)  # 使用I2C总线1
+		self.bus = smbus2.SMBus(1)  # 使用I2C总线1
 		self.address = 0x50  # JY61P的I2C地址
 		self.imu_pub = self.create_publisher(Imu, 'imu/data', 10)
 		self.angles_pub = self.create_publisher(Vector3, 'imu/angles', 10)
 		self.timer = self.create_timer(0.1, self.timer_callback)  # 每0.1秒读取一次数据
 		self.declare_parameter('frame_id', 'imu_link')  # 声明参数，用于设置IMU数据的参考系
 		self.frame_id = self.get_parameter('frame_id').value
+		self.init_imu(self.bus)  # 初始化IMU传感器
+
 
 	def timer_callback(self):
 		try:
@@ -114,11 +116,26 @@ class JY61PDriver(Node):
 
 		return [q1, q2, q3, q0]
 
+	def init_imu(self, bus):
+		"""
+		初始化IMU传感器
+		"""
+		try:
+			bus.write_i2c_block_data(self.address, 0x69, [0X88, 0XB5])
+			time.sleep(0.2)
+			bus.write_i2c_block_data(self.address, 0x01, [0X04, 0X00])
+			time.sleep(0.2)
+			bus.write_i2c_block_data(self.address, 0x00, [0X00, 0X00])
+			time.sleep(0.2)
+		except Exception as e:
+			self.get_logger().error('Error initializing IMU: %s' % str(e))
+
 
 def main(args=None):
 	rclpy.init(args=args)
 	imu = JY61PDriver()
 	rclpy.spin(imu)
+	imu.bus.close()
 	imu.destroy_node()
 	rclpy.shutdown()
 

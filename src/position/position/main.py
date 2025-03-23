@@ -15,7 +15,7 @@ class PositionNode(Node):
 		# Initialize the serial port
 		self.serial = Serial(
 			port='/dev/ttyAMA2',
-			baudrate=115200,
+			baudrate=38400,
 			bytesize=8,
 			parity='N',
 			stopbits=1,
@@ -59,7 +59,8 @@ class PositionNode(Node):
 		self.yaw = msg.z
 
 		# Most important: Yaw Axis
-		angles_data = f'Angles - Roll: {self.roll:.2f}, Pitch: {self.pitch:.2f}, Yaw: {self.yaw:.2f}\n'
+		angles_data = f'Angles: {self.roll:.2f},{self.pitch:.2f},{self.yaw:.2f}\n'
+		self.serial.write(angles_data.encode('utf-8'))  # Send angles to STM32
 		self.get_logger().info(angles_data)
 
 	def ladar_callback(self, msg):
