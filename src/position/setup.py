@@ -20,7 +20,7 @@ setup(
 	tests_require=['pytest'],
 	entry_points={
 		'console_scripts': [
-			"main = position.direct:main",
+			"main = position.main:main",
 		],
 	},
 )
