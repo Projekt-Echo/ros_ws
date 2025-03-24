@@ -44,9 +44,6 @@ class PoseNode(Node):
 		self.distance_180 = 0.0  # 180 degrees (left side)
 		self.distance_270 = 0.0  # 270 degrees (back side)
 
-		self.last_valid_x = 0.0
-		self.last_valid_y = 0.0
-
 		self.roll = 0.0
 		self.pitch = 0.0
 		self.yaw = 0.0
@@ -56,8 +53,19 @@ class PoseNode(Node):
 		self.timer = self.create_timer(0.1, self.timer_callback)  # Message Frequency: 10Hz
 
 	def timer_callback(self):
-		pose = self.pose_msg_builder(self.pitch, self.roll, self.yaw, self.last_valid_x, self.last_valid_y)
-		self.pose_sender(pose)
+		"""
+		Timer callback to send position data at 10Hz
+		"""
+		# Use distance_180 as Y coordinate and distance_270 as X coordinate
+		y_coord = self.distance_180 if hasattr(self, 'distance_180') else 0.0
+		x_coord = self.distance_270 if hasattr(self, 'distance_270') else 0.0
+
+		# Build the formatted message
+		formatted_data = self.pose_msg_builder(
+			self.pitch, self.roll, self.yaw, x_coord, y_coord)
+
+		# Send the data
+		self.pose_sender(formatted_data)
 
 	def angles_callback(self, msg):
 		"""
@@ -84,19 +92,34 @@ class PoseNode(Node):
 		# Calculate how many points are in the scan
 		num_points = len(msg.ranges)
 
-		# Define angles and corresponding attribute names
-		directions = {
-			"distance_0": self.distance_0,
-			"distance_90": self.distance_90,
-			"distance_180": self.distance_180,
-			"distance_270": self.distance_270,
+		# Define angles to check (in degrees)
+		angles = {
+			0: 'distance_0',
+			90: 'distance_90',
+			180: 'distance_180',
+			270: 'distance_270'
 		}
 
-		# Calculate the index and obtain the safe distance
-		for attr, angle in directions.items():
-			idx = int((angle - msg.angle_min) / msg.angle_increment) % num_points
-			distance = msg.ranges[idx]
-			setattr(self, attr, distance if not (math.isnan(distance) or distance == float('inf')) else 0)
+		# Calculate the index and obtain the safe distance for each angle
+		for angle_deg, attr_name in angles.items():
+			# Convert degrees to radians
+			angle_rad = math.radians(angle_deg)
+
+			# Calculate the index in the ranges array
+			idx = int((angle_rad - msg.angle_min) / msg.angle_increment)
+
+			# Make sure index is within bounds
+			if idx >= 0 and idx < num_points:
+				distance = msg.ranges[idx]
+
+				# Store current value or keep previous if invalid
+				if not math.isnan(distance) and distance != float('inf'):
+					setattr(self, attr_name, distance)
+				# If no previous valid value exists, set to 0
+				elif not hasattr(self, attr_name) or getattr(self, attr_name) in (float('inf'), float('nan')):
+					setattr(self, attr_name, 0.0)
+
+	# Otherwise keep previous value (already in the attribute)
 
 	# self.get_logger().info(
 	# 	f'Distances - 0°: {self.distance_0:.2f}, 90°: {self.distance_90:.2f}, 180°: {self.distance_180:.2f}, 270°: {self.distance_270:.2f}')
@@ -117,18 +140,28 @@ class PoseNode(Node):
 		if not hasattr(self, 'last_valid_y'):
 			self.last_valid_y = 0
 
+		# First convert to centimeters for raw coordinates
+		x_cm = x_coord * 100
+		y_cm = y_coord * 100
+
 		# Safety check for coordinates
-		if math.isnan(x_coord) or math.isnan(y_coord):
-			self.get_logger().warn('NaN values detected in coordinate data, using previous values')
-			x_coord = self.last_valid_x
-			y_coord = self.last_valid_y
+		if math.isnan(x_coord) or x_coord == float('inf') or x_coord == 0.0:
+			self.get_logger().warn(f'Invalid X value detected: {x_coord}, using previous value')
+			x_cm = self.last_valid_x
 		else:
-			# Transform coordinates to centimeters and limit to 4 digits
-			x_coord = min(int(x_coord * 100), 9999)  # Transform to centimeters and limit to 4 digits
-			y_coord = min(int(y_coord * 100), 9999)  # Transform to centimeters and limit to 4 digits
-			# Store the last valid coordinates
-			self.last_valid_x = x_coord
-			self.last_valid_y = y_coord
+			# Store the valid raw value
+			self.last_valid_x = x_cm
+
+		if math.isnan(y_coord) or y_coord == float('inf') or y_coord == 0.0:
+			self.get_logger().warn(f'Invalid Y value detected: {y_coord}, using previous value')
+			y_cm = self.last_valid_y
+		else:
+			# Store the valid raw value
+			self.last_valid_y = y_cm
+
+		# Limit to 4 digits
+		x_cm = min(int(x_cm), 9999)
+		y_cm = min(int(y_cm), 9999)
 
 		# Safety check for angles
 		if math.isnan(pitch):
@@ -144,7 +177,7 @@ class PoseNode(Node):
 		yaw_str = f"{'+' if yaw >= 0 else '-'}{int(abs(yaw)):03d}.{int(abs(yaw * 100) % 100):02d}"
 
 		# Construct the formatted message string
-		data = f"@:{pitch_str},{roll_str},{yaw_str} #:{x_coord:04d},{y_coord:04d}\n"
+		data = f"@:{pitch_str},{roll_str},{yaw_str} #:{x_cm:04d},{y_cm:04d}\n"
 
 		return data
 
