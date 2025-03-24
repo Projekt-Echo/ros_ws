@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'position'
+package_name = 'pose'
 
 setup(
 	name=package_name,
@@ -20,7 +20,7 @@ setup(
 	tests_require=['pytest'],
 	entry_points={
 		'console_scripts': [
-			"main = position.main:main",
+			"main = pose.main:main",
 		],
 	},
 )
