@@ -8,7 +8,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Imu
 from std_srvs.srv import Trigger
 
-from .constant import *
+from .constant_register import *
 
 
 class JY61PDriver(Node):
